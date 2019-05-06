@@ -1,5 +1,6 @@
 library(rworldmap)
 library(dplyr)
+library(purrr)
 
 ##### Data preprocessing #####
 # Reading source data 
@@ -22,8 +23,7 @@ points(sourceDataNorm$LON, sourceDataNorm$LAT, col = "red", cex = .1)
 
 
 # wybranie poszczególnych tras danych krajów
-
-spainRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='ES'")
+spainRoutes <- sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='ES'")
 franceRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='FR'")
 netherlandsRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='NL'")
 englandRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='UK'")
