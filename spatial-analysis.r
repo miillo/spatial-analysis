@@ -1,4 +1,5 @@
 library(rworldmap)
+library(dplyr)
 
 ##### Data preprocessing #####
 # Reading source data 
@@ -18,3 +19,32 @@ plot(map)
 
 # naniesienie punktow na mape swiata
 points(sourceDataNorm$LON, sourceDataNorm$LAT, col = "red", cex = .1)
+
+
+# wybranie poszczególnych tras danych krajów
+
+spainRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='ES'")
+franceRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='FR'")
+netherlandsRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='NL'")
+englandRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='UK'")
+sweedenRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='SE'")
+usaRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='US'")
+germanyRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='DE'")
+denmarkRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='DK'")
+
+# naniesienie punktow na mape swiata
+points(spainRoutes$LON, spainRoutes$LAT, col = "red", cex = .6)
+points(franceRoutes$LON, franceRoutes$LAT, col = "green", cex = .6)
+points(netherlandsRoutes$LON, netherlandsRoutes$LAT, col = "blue", cex = .6)
+points(englandRoutes$LON, englandRoutes$LAT, col = "yellow", cex = .6)
+points(sweedenRoutes$LON, sweedenRoutes$LAT, col = "pink", cex = .6)
+points(usaRoutes$LON, usaRoutes$LAT, col = "purple", cex = .6)
+points(germanyRoutes$LON, germanyRoutes$LAT, col = "orange", cex = .6)
+points(denmarkRoutes$LON, denmarkRoutes$LAT, col = "brown", cex = .6)
+
+
+
+
+
+
+
