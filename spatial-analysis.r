@@ -19,14 +19,14 @@ plot(map)
 points(sourceDataNorm$LON, sourceDataNorm$LAT, pch = 1,  col = "red", cex = .6)
 
 # choosing routes by country 
-spainRoutes <- sqldf::sqldf("SELECT LON,LAT,C1 from sourceData WHERE C1 == 'ES'")
-franceRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='FR'")
-netherlandsRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='NL'")
-englandRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='UK'")
-sweedenRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='SE'")
-usaRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='US'")
-germanyRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='DE'")
-denmarkRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='DK'")
+spainRoutes <- sqldf::sqldf("SELECT LON,LAT,C1 from sourceData WHERE C1 == 'ES' AND LAT!='NA' AND LON!='NA'")
+franceRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='FR' AND LAT!='NA' AND LON!='NA'")
+netherlandsRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='NL' AND LAT!='NA' AND LON!='NA'")
+englandRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='UK' AND LAT!='NA' AND LON!='NA'")
+sweedenRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='SE' AND LAT!='NA' AND LON!='NA'")
+usaRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='US' AND LAT!='NA' AND LON!='NA'")
+germanyRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='DE' AND LAT!='NA' AND LON!='NA'")
+denmarkRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='DK' AND LAT!='NA' AND LON!='NA'")
 
 # drawing chosen routes on world map
 points(spainRoutes$LON, spainRoutes$LAT, col = "red", cex = .6)

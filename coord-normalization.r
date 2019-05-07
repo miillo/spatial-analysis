@@ -9,3 +9,4 @@ longNorm <- function(y) {
 latNorm <- function(x) {
   x / 100
 }
+
