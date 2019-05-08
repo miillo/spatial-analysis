@@ -1,6 +1,7 @@
 library(rworldmap)
 library(dplyr)
 library(purrr)
+library(spatstat)
 
 ##### Data preprocessing #####
 # Reading source data 
@@ -38,9 +39,5 @@ points(usaRoutes$LON, usaRoutes$LAT, col = "purple", cex = .6)
 points(germanyRoutes$LON, germanyRoutes$LAT, col = "orange", cex = .6)
 points(denmarkRoutes$LON, denmarkRoutes$LAT, col = "brown", cex = .6)
 
-
-
-
-
-
+##### Data analysis #####
 
