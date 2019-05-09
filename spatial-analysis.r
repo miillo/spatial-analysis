@@ -1,7 +1,7 @@
 library(rworldmap)
 library(dplyr)
 library(purrr)
-library(spatstat)
+library(gstat)
 
 ##### Data preprocessing #####
 # Reading source data 
@@ -26,7 +26,7 @@ netherlandsRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1
 englandRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='UK' AND LAT!='NA' AND LON!='NA'")
 sweedenRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='SE' AND LAT!='NA' AND LON!='NA'")
 usaRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='US' AND LAT!='NA' AND LON!='NA'")
-germanyRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='DE' AND LAT!='NA' AND LON!='NA'")
+germanyRoutes<-sqldf::sqldf("SELECT LON,LAT,C1,W from sourceDataNorm  WHERE C1=='DE' AND LAT!='NA' AND LON!='NA' AND W != 'NA' AND W != 0")
 denmarkRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='DK' AND LAT!='NA' AND LON!='NA'")
 
 # drawing chosen routes on world map
@@ -41,3 +41,20 @@ points(denmarkRoutes$LON, denmarkRoutes$LAT, col = "brown", cex = .6)
 
 ##### Data analysis #####
 
+# Kriging - w opracowaniu
+class(germanyRoutes)
+coordinates(germanyRoutes) <- ~ LAT + LON
+class(germanyRoutes)
+str(germanyRoutes)
+
+bbox(germanyRoutes)
+
+#print(tbl_df(germanyRoutes), n = 55)
+lzn.vgm1 <- variogram(log(W)~1, germanyRoutes)
+lzn.fit1 <- fit.variogram(lzn.vgm1, model = vgm("Sph", 4000, nugget = 0.5))
+plot(lzn.vgm1, lzn.fit1)
+
+#data("meuse.grid")
+#head(meuse.grid)
+
+# # # # # # # # #
