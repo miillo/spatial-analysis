@@ -10,3 +10,6 @@ latNorm <- function(x) {
   x / 100
 }
 
+wNorm <- function(x) {
+  x / 10
+}

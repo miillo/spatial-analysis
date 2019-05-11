@@ -2,6 +2,8 @@ library(rworldmap)
 library(dplyr)
 library(purrr)
 library(gstat)
+library(ggplot2)
+library(lattice) # generating grid for kriging
 
 ##### Data preprocessing #####
 # Reading source data 
@@ -10,7 +12,9 @@ sourceData = read.fwf("CLIWOC21CORE.txt", widths = c(4,2,2,4,5,6,2,1,1,1,1,1,2,2
 
 # Normalizing longitude / latitude
 source("coord-normalization.r")
-sourceDataNorm <- transform(sourceData, LAT = latNorm(sourceData$LAT), LON = as.integer(map(sourceData$LON, longNorm)))
+sourceDataNorm <- transform(sourceData, LAT = latNorm(sourceData$LAT),
+                            LON = as.double(map(sourceData$LON, longNorm)), 
+                            W = as.double(map(sourceData$W, wNorm)))
 
 ##### Presenting source data #####
 map <- getMap(resolution = 'low')
@@ -29,6 +33,10 @@ usaRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='US' A
 germanyRoutes<-sqldf::sqldf("SELECT LON,LAT,C1,W from sourceDataNorm  WHERE C1=='DE' AND LAT!='NA' AND LON!='NA' AND W != 'NA' AND W != 0")
 denmarkRoutes<-sqldf::sqldf("SELECT LON,LAT,C1 from sourceDataNorm  WHERE C1=='DK' AND LAT!='NA' AND LON!='NA'")
 
+# choosing Bay of Biscay routes
+bayOfBiscay <- sqldf::sqldf("SELECT LON,LAT,C1,W from sourceDataNorm WHERE C1 == 'FR' AND LAT > 43.27 AND LAT < 47.98 AND 
+                            LON > -7.89 AND LON < -0.14 AND LAT!='NA' AND LON!='NA' AND W != 'NA' AND W != 0")
+
 # drawing chosen routes on world map
 points(spainRoutes$LON, spainRoutes$LAT, col = "red", cex = .6)
 points(franceRoutes$LON, franceRoutes$LAT, col = "green", cex = .6)
@@ -38,23 +46,64 @@ points(sweedenRoutes$LON, sweedenRoutes$LAT, col = "pink", cex = .6)
 points(usaRoutes$LON, usaRoutes$LAT, col = "purple", cex = .6)
 points(germanyRoutes$LON, germanyRoutes$LAT, col = "orange", cex = .6)
 points(denmarkRoutes$LON, denmarkRoutes$LAT, col = "brown", cex = .6)
+points(bayOfBiscay$LON, bayOfBiscay$LAT, col = "green", cex = .6)
 
 ##### Data analysis #####
 
-# Kriging - w opracowaniu
-class(germanyRoutes)
+# Kriging
+# Experiment I - Germany routes 
+
+# Setting coordinates for spatial object
 coordinates(germanyRoutes) <- ~ LAT + LON
-class(germanyRoutes)
-str(germanyRoutes)
 
-bbox(germanyRoutes)
+# Calculating variogram based on W(wind speed) variable
+lzn.vgmger <- variogram(log(W)~1, germanyRoutes)
 
-#print(tbl_df(germanyRoutes), n = 55)
-lzn.vgm1 <- variogram(log(W)~1, germanyRoutes)
-lzn.fit1 <- fit.variogram(lzn.vgm1, model = vgm("Sph", 4000, nugget = 0.5))
-plot(lzn.vgm1, lzn.fit1)
+# Fiting variogram to chosen model
+lzn.fitger <- fit.variogram(lzn.vgmger, model = vgm("Sph"))
+plot(lzn.vgmger, lzn.fitger)
 
-#data("meuse.grid")
-#head(meuse.grid)
+# Generating grid for kriging
+lon <- seq(-40,10,by=1)
+lat <- seq(-40,40,by=1)
+grid <- expand.grid(lat = lat, lon = lon)
+coordinates(grid) <-  ~ lat + lon
 
-# # # # # # # # #
+# Computing kriging
+lzn.krigedger <- krige(log(W)~1, germanyRoutes, grid, model = lzn.fitger)
+spplot(lzn.krigedger,"var1.pred",asp=1,col.regions=bpy.colors(64),xlim=c(-40,40),ylim=c(-40,10),main="Kriging Prediction by Sph Model of wind speed in germany ships routes")
+
+## end od Experiment I
+
+# Experiment II - Bay of Biscay routes
+
+# Choosing representatives
+bayOfBiscayT <- head(bayOfBiscay, 300)
+
+# Setting coordinates for spatial object
+coordinates(bayOfBiscayT) <- ~ LAT + LON
+
+# Calculating variogram based on W(wind speed) variable
+lzn.vgmbob <- variogram(log(W)~1, bayOfBiscayT, cutoff=7)
+
+# Fiting variogram to chosen model
+lzn.fitbob <- fit.variogram(lzn.vgmbob, model = vgm(psill = max(lzn.vgmbob$gamma)*0.5, 
+                                                    model = "Sph", range = max(lzn.vgmbob$dist)/2,
+                                                    nugget = mean(lzn.vgmbob$gamma)/4))
+plot(lzn.vgmbob, lzn.fitbob)
+
+# Generating grid for kriging
+lon <- seq(-10,0,by=0.01)
+lat <- seq(40,48.0,by=0.01)
+grid <- expand.grid(lat = lat, lon = lon)
+coordinates(grid) <-  ~ lat + lon
+
+# Deleting duplicates
+bayOfBiscayTUni <- bayOfBiscayT[-zerodist(bayOfBiscayT)[,1],]
+
+# Computing kriging
+lzn.krigedbob <- krige(log(W)~1, bayOfBiscayTUni, grid, model = lzn.fitbob)
+spplot(lzn.krigedbob,"var1.pred",asp=1,col.regions=bpy.colors(64),xlim=c(42,48),ylim=c(-11,5),main="Kriging Prediction by Sph Model of wind speed in Bay of Biscay france routes")
+# end of Experiment II
+
+# end of Kriging analysis
