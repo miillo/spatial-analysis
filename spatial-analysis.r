@@ -4,6 +4,7 @@ library(purrr)
 library(gstat)
 library(ggplot2)
 library(lattice) # generating grid for kriging
+library(tidyverse)
 
 ##### Data preprocessing #####
 # Reading source data 
@@ -101,9 +102,10 @@ coordinates(grid) <-  ~ lat + lon
 # Deleting duplicates
 bayOfBiscayTUni <- bayOfBiscayT[-zerodist(bayOfBiscayT)[,1],]
 
-# Computing kriging
+# Computing kriging - takes some time
 lzn.krigedbob <- krige(log(W)~1, bayOfBiscayTUni, grid, model = lzn.fitbob)
 spplot(lzn.krigedbob,"var1.pred",asp=1,col.regions=bpy.colors(64),xlim=c(42,48),ylim=c(-11,5),main="Kriging Prediction by Sph Model of wind speed in Bay of Biscay france routes")
 # end of Experiment II
 
 # end of Kriging analysis
+
