@@ -13,3 +13,8 @@ latNorm <- function(x) {
 wNorm <- function(x) {
   x / 10
 }
+mycolorstographs<-function(n)
+{
+  rev(heat.colors(n))
+}
+
