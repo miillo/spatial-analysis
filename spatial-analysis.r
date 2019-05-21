@@ -1,3 +1,6 @@
+#Detach all packages
+# lapply(names(sessionInfo()$otherPkgs), function(pkgs) detach(paste0('package:',pkgs),character.only = T,unload = T,force=T))
+
 library(rworldmap)
 library(dplyr)
 library(purrr)
@@ -12,6 +15,7 @@ library(sn)
 library(tmaptools)
 library(tmap)
 library(tidyverse)
+library(geoR)
 
 #test
 if (!require("rspatial")) devtools::install_github('rspatial/rspatial')
@@ -62,7 +66,24 @@ points(bayOfBiscay$LON, bayOfBiscay$LAT, col = "green", cex = .6)
 
 ##### Data analysis #####
 
-# Kriging
+################## Variograms ##################
+# Data preprocessing
+gerandus<-sqldf::sqldf("SELECT LON,LAT,W from sourceDataNorm  WHERE C1=='GER' OR C1 == 'US' AND LAT!='NA' AND LON!='NA' AND W != 'NA' AND W != 0")
+gerandusGeoData <- as.geodata(obj = gerandus, coords.col = 1:2, data.col = 3)
+
+# Experiment 1 - Cloud variogram
+cloudVariogram <- variog(geodata = gerandusGeoData, option = "cloud", max.dist = 5)
+plot(cloudVariogram, main = "Cloud variogram")
+
+# Experiment 2 - Bin variogram
+dists <- dist(gerandus[,1:2])
+breaks = seq(0, 185, l = 25)
+binVariogram <- variog(gerandusGeoData, breaks = breaks)
+plot(binVariogram, main = "Bin variogram")
+
+################## End of variograms analysis ##################
+
+################## Kriging ################### 
 # Experiment I - Germany routes 
 
 # Setting coordinates for spatial object
@@ -118,15 +139,7 @@ lzn.krigedbob <- krige(log(W)~1, bayOfBiscayTUni, grid, model = lzn.fitbob)
 spplot(lzn.krigedbob,"var1.pred",asp=1,col.regions=bpy.colors(64),xlim=c(42,48),ylim=c(-11,5),main="Kriging Prediction by Sph Model of wind speed in Bay of Biscay france routes")
 # end of Experiment II
 
-# end of Kriging analysis
-
-# ???
-
-gerandus<-sqldf::sqldf("SELECT LON,LAT from sourceDataNorm  WHERE C1=='DE' OR C1=='US' AND LAT!='NA' AND LON!='NA' AND W != 'NA' AND W != 0")
-gerandusAttr<-sqldf::sqldf("SELECT C1 from sourceDataNorm  WHERE C1=='DE' OR C1=='US' AND LAT!='NA' AND LON!='NA' AND W != 'NA' AND W != 0")
-dfTemp <- data.frame(ID=1:nrow(gerandusAttr), C1=gerandusAttr)
-
-# end of ???
+################## End of kriging analysis ##################
 
 #hexbin
 #utworzenie najprostsza komenda tworzaca obiekt hexbin oraz wyswietlajaca dane
@@ -162,3 +175,40 @@ densityEngland<-density2d(englandRoutes$LON,englandRoutes$LAT,n=300,h=NULL,limit
 plot(densityEngland)
 image(densityEngland,xlab = "LON",ylab="LAT")
 contour(densityEngland,add=TRUE)
+
+################## Autocorelation czy KDE.points?################### 
+
+#Data preprocessing
+LONfranceRoutes<-franceRoutes<-sqldf::sqldf("SELECT LON from sourceDataNorm  WHERE  LAT!='NA' AND LON!='NA'")
+LATfranceRoutes<-franceRoutes<-sqldf::sqldf("SELECT LAT from sourceDataNorm  WHERE  LAT!='NA' AND LON!='NA'")
+franceRoutesSpatialP.map <- cbind(LONfranceRoutes,LATfranceRoutes)
+franceRoutesSpatialP <- SpatialPoints(franceRoutesSpatialP.map)
+
+library(GISTools)
+gg <- kde.points(franceRoutesSpatialP, h = 10, n = 10)
+level.plot(gg)
+?kde.points
+library(spdep)
+o <- gabrielneigh(franceRoutesSpatialP, nnmult = 3)
+relativeneigh(franceRoutesSpatialP, nnmult = 3)
+?knearneigh
+?gabrielneigh
+?tri2nb
+?graph2nb
+?st_geometry
+?dnearneigh
+wob <- knearneigh(franceRoutesSpatialP, k=4)
+wob1 <- knn2nb(wob)
+
+st_centroid(st_geometry(franceRoutesSpatialP))
+class(wob1)
+plot(knn2nb(wob), franceRoutesSpatialP, add = TRUE)
+
+class(wob)
+plot(wob)
+wob1 <- graph2nb(wob)
+
+plot(o, show.points = TRUE, add=TRUE)
+w <- graph2nb(o, row.names = NULL)
+plot(w)
+################## End of autocorelation analysis ################### 
