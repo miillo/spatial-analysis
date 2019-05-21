@@ -13,6 +13,10 @@ library(tmaptools)
 library(tmap)
 library(tidyverse)
 
+#test
+if (!require("rspatial")) devtools::install_github('rspatial/rspatial')
+library(rspatial)
+
 ##### Data preprocessing #####
 # Reading source data 
 sourceData = read.fwf("CLIWOC21CORE.txt", widths = c(4,2,2,4,5,6,2,1,1,1,1,1,2,2,9,2,1,3,1,3,1,2,2,1,5,1,3,1,4,1,4,1,4,2,4,1,1,1,1,1,1,1,2,2,2,2,2,2), 
@@ -115,6 +119,14 @@ spplot(lzn.krigedbob,"var1.pred",asp=1,col.regions=bpy.colors(64),xlim=c(42,48),
 # end of Experiment II
 
 # end of Kriging analysis
+
+# ???
+
+gerandus<-sqldf::sqldf("SELECT LON,LAT from sourceDataNorm  WHERE C1=='DE' OR C1=='US' AND LAT!='NA' AND LON!='NA' AND W != 'NA' AND W != 0")
+gerandusAttr<-sqldf::sqldf("SELECT C1 from sourceDataNorm  WHERE C1=='DE' OR C1=='US' AND LAT!='NA' AND LON!='NA' AND W != 'NA' AND W != 0")
+dfTemp <- data.frame(ID=1:nrow(gerandusAttr), C1=gerandusAttr)
+
+# end of ???
 
 #hexbin
 #utworzenie najprostsza komenda tworzaca obiekt hexbin oraz wyswietlajaca dane
