@@ -21,6 +21,10 @@ library(geoR)
 if (!require("rspatial")) devtools::install_github('rspatial/rspatial')
 library(rspatial)
 
+
+library(sp)
+library(raster)
+
 ##### Data preprocessing #####
 # Reading source data 
 sourceData = read.fwf("CLIWOC21CORE.txt", widths = c(4,2,2,4,5,6,2,1,1,1,1,1,2,2,9,2,1,3,1,3,1,2,2,1,5,1,3,1,4,1,4,1,4,2,4,1,1,1,1,1,1,1,2,2,2,2,2,2), 
@@ -154,13 +158,6 @@ pushHexport(p$plot.vp)
 grid.hexagons(englandHexB,style="lattice", border = gray(.1), pen = gray(.6),minarea = .04, maxarea = 0.9)
 popViewport()
 
-#to chyba jednak nie
-p<- plot(englandHexB, type="n", main="Trasy angielskich statkow")
-pushHexport(p$plot.vp)
-grid.hexagons(englandHexB, style = "nested.centroids",use.count=TRUE,minarea = 0.05, maxarea = 0.9, check.erosion = TRUE,mincnt = 1, maxcnt = max(englandHexB@count),colorcut = seq(0, 1, length = 17),density = NULL)
-grid.hexlegend(3500,7000,style="nested.centroids", ysize = 5000,lcex=0.9,inner=0.5,maxcnt = max(englandHexB@count),mincnt = 0,minarea = 500,maxarea = 2000)
-grid.li
-popViewport()
 
 #eroded fun odrzucenie polowy mniej uczeszczanych i zostawienie najbardziej
 
@@ -212,3 +209,28 @@ plot(o, show.points = TRUE, add=TRUE)
 w <- graph2nb(o, row.names = NULL)
 plot(w)
 ################## End of autocorelation analysis ################### 
+
+
+#point pattern
+#wyznaczenie sredniej odleglosci i zaznaczenie jej na mapie
+plot(map)
+points(franceRoutes$LON,franceRoutes$LAT, col='red', cex=0.5,pch='+')
+LONfranceRoutes<-franceRoutes<-sqldf::sqldf("SELECT LON from sourceDataNorm  WHERE C1=='FR' AND LAT!='NA' AND LON!='NA'")
+LATfranceRoutes<-franceRoutes<-sqldf::sqldf("SELECT LAT from sourceDataNorm  WHERE C1=='FR' AND LAT!='NA' AND LON!='NA'")
+xy<-cbind(LONfranceRoutes,LATfranceRoutes)
+xy.sp<-SpatialPoints(xy)
+xyCO<-coordinates(xy.sp)
+dim(xyCO)
+xyCO<-unique(xyCO)
+mc<-apply(xyCO, 2, mean)
+sd <- sqrt(sum((xyCO[,1] - mc[1])^2 + (xyCO[,2] - mc[2])^2) / nrow(xyCO))
+plot(map, col='light blue')
+points(xy.sp, cex=.5)
+points(cbind(mc[1], mc[2]), pch='*', col='red', cex=5)
+# make a circle
+bearing <- 1:360 * pi/180
+cx <- mc[1] + sd * cos(bearing)
+cy <- mc[2] + sd * sin(bearing)
+circle <- cbind(cx, cy)
+lines(circle, col='red', lwd=2)
+
