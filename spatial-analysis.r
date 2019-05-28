@@ -1,5 +1,5 @@
 #Detach all packages
-# lapply(names(sessionInfo()$otherPkgs), function(pkgs) detach(paste0('package:',pkgs),character.only = T,unload = T,force=T))
+ lapply(names(sessionInfo()$otherPkgs), function(pkgs) detach(paste0('package:',pkgs),character.only = T,unload = T,force=T))
 
 library(rworldmap)
 library(dplyr)
@@ -16,12 +16,6 @@ library(tmaptools)
 library(tmap)
 library(tidyverse)
 library(geoR)
-
-#test
-if (!require("rspatial")) devtools::install_github('rspatial/rspatial')
-library(rspatial)
-
-
 library(sp)
 library(raster)
 
@@ -145,10 +139,11 @@ spplot(lzn.krigedbob,"var1.pred",asp=1,col.regions=bpy.colors(64),xlim=c(42,48),
 
 ################## End of kriging analysis ##################
 
-#hexbin
-#utworzenie najprostsza komenda tworzaca obiekt hexbin oraz wyswietlajaca dane
+################## Hexbin / fMultivar analysis ################### 
+
+# Creating hexbin object
 englandHexB<-hexbin(englandRoutes$LON,englandRoutes$LAT,shape = 0.5, xbins = 100, xbnds = range(englandRoutes$LON),ybnds = range(englandRoutes$LAT), xlab="LON",ylab = "LAT")
-#komenda pozwalajaca na wieksze mozliwosci obrazowania wynikow
+# Visualizing results
 hexbinplot(englandRoutes$LAT ~ englandRoutes$LON, data=NULL, xbins = 100,xlab="LON",ylab="LAT",colramp = mycolorstographs, colorcut = seq(0, 1, length = 15))
 hexbinplot(englandRoutes$LAT ~ englandRoutes$LON, data=NULL,shape=0.5, xbins = 100,xlab="LON",ylab="LAT",colramp = mycolorstographs, colorcut = seq(0, 1, length = 15))
 hexbinplot(englandRoutes$LAT ~ englandRoutes$LON, data=NULL,shape=0.5, xbins = 100,xlab="LON",ylab="LAT", style="nested.centroids")
@@ -159,8 +154,7 @@ grid.hexagons(englandHexB,style="lattice", border = gray(.1), pen = gray(.6),min
 popViewport()
 
 
-#eroded fun odrzucenie polowy mniej uczeszczanych i zostawienie najbardziej
-
+#Eroded - leaving most attended routes
 smbin<-smooth.hexbin(englandHexB)
 erodebin <- erode.hexbin(smbin, cdfcut=.5)
 hboxplot(erodebin, main = "Obraz przedstawiajacy najbardziej uczeszczane szlaki",border = c(2,4))
@@ -173,46 +167,9 @@ plot(densityEngland)
 image(densityEngland,xlab = "LON",ylab="LAT")
 contour(densityEngland,add=TRUE)
 
-################## Autocorelation czy KDE.points?################### 
+################## End of Hexbin / fMultivar analysis ################### 
 
-#Data preprocessing
-LONfranceRoutes<-franceRoutes<-sqldf::sqldf("SELECT LON from sourceDataNorm  WHERE  LAT!='NA' AND LON!='NA'")
-LATfranceRoutes<-franceRoutes<-sqldf::sqldf("SELECT LAT from sourceDataNorm  WHERE  LAT!='NA' AND LON!='NA'")
-franceRoutesSpatialP.map <- cbind(LONfranceRoutes,LATfranceRoutes)
-franceRoutesSpatialP <- SpatialPoints(franceRoutesSpatialP.map)
-
-library(GISTools)
-gg <- kde.points(franceRoutesSpatialP, h = 10, n = 10)
-level.plot(gg)
-?kde.points
-library(spdep)
-o <- gabrielneigh(franceRoutesSpatialP, nnmult = 3)
-relativeneigh(franceRoutesSpatialP, nnmult = 3)
-?knearneigh
-?gabrielneigh
-?tri2nb
-?graph2nb
-?st_geometry
-?dnearneigh
-wob <- knearneigh(franceRoutesSpatialP, k=4)
-wob1 <- knn2nb(wob)
-
-st_centroid(st_geometry(franceRoutesSpatialP))
-class(wob1)
-plot(knn2nb(wob), franceRoutesSpatialP, add = TRUE)
-
-class(wob)
-plot(wob)
-wob1 <- graph2nb(wob)
-
-plot(o, show.points = TRUE, add=TRUE)
-w <- graph2nb(o, row.names = NULL)
-plot(w)
-################## End of autocorelation analysis ################### 
-
-
-#point pattern
-#wyznaczenie sredniej odleglosci i zaznaczenie jej na mapie
+################## Point patterns analysis ################### 
 plot(map)
 points(franceRoutes$LON,franceRoutes$LAT, col='red', cex=0.5,pch='+')
 LONfranceRoutes<-franceRoutes<-sqldf::sqldf("SELECT LON from sourceDataNorm  WHERE C1=='FR' AND LAT!='NA' AND LON!='NA'")
